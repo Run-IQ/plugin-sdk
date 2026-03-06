@@ -29,9 +29,6 @@
   "peerDependencies": {
     "@run-iq/core": "^0.1.0"
   },
-  "dependencies": {
-    "@run-iq/core": "file:../core"
-  },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
