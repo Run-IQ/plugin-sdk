@@ -1,4 +1,4 @@
-import type { CalculationModel, ValidationResult, Rule } from '@run-iq/core';
+import type { CalculationModel, CalculationOutput, ValidationResult, Rule } from '@run-iq/core';
 
 export abstract class BaseModel implements CalculationModel {
   abstract readonly name: string;
@@ -10,5 +10,5 @@ export abstract class BaseModel implements CalculationModel {
     input: Record<string, unknown>,
     matchedRule: Readonly<Rule>,
     params: unknown,
-  ): number;
+  ): number | CalculationOutput;
 }
