@@ -21,4 +21,9 @@ export type {
   Snapshot,
   EvaluationTrace,
   TraceStep,
+  RuleFieldDescriptor,
+  InputFieldDescriptor,
+  RuleExample,
+  PluginDescriptor,
+  PluginBundle,
 } from './types/index.js';

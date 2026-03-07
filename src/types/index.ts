@@ -16,3 +16,11 @@ export type {
   EvaluationTrace,
   TraceStep,
 } from '@run-iq/core';
+
+export type {
+  RuleFieldDescriptor,
+  InputFieldDescriptor,
+  RuleExample,
+  PluginDescriptor,
+  PluginBundle,
+} from './descriptor.js';
