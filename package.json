@@ -1,6 +1,6 @@
 {
   "name": "@run-iq/plugin-sdk",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Plugin SDK for PPE — BasePlugin, BaseModel, PluginTester",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -29,7 +29,7 @@
     "lint:fix": "eslint src/ tests/ --fix && prettier --write src/ tests/"
   },
   "peerDependencies": {
-    "@run-iq/core": "^0.2.1"
+    "@run-iq/core": "^0.2.4"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

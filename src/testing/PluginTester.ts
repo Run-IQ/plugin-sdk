@@ -30,7 +30,7 @@ export class PluginTester {
     const results: BeforeEvaluateResult[] = [];
     for (let i = 0; i < 3; i++) {
       if (this.plugin.beforeEvaluate) {
-        results.push(this.plugin.beforeEvaluate(input, rules));
+        results.push(await this.plugin.beforeEvaluate(input, rules));
       }
     }
 
@@ -49,7 +49,7 @@ export class PluginTester {
     const rulesCopy = JSON.parse(JSON.stringify(rules)) as Rule[];
 
     if (this.plugin.beforeEvaluate) {
-      this.plugin.beforeEvaluate(input, rules);
+      await this.plugin.beforeEvaluate(input, rules);
     }
 
     if (JSON.stringify(input) !== JSON.stringify(inputCopy)) {
@@ -84,8 +84,8 @@ export class PluginTester {
 
   async assertNoSideEffects(input: EvaluationInput, rules: ReadonlyArray<Rule>): Promise<void> {
     if (this.plugin.beforeEvaluate) {
-      const r1 = this.plugin.beforeEvaluate(input, rules);
-      const r2 = this.plugin.beforeEvaluate(input, rules);
+      const r1 = await this.plugin.beforeEvaluate(input, rules);
+      const r2 = await this.plugin.beforeEvaluate(input, rules);
 
       if (JSON.stringify(r1) !== JSON.stringify(r2)) {
         throw new Error('Side effects detected: different results between calls');
