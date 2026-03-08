@@ -1,6 +1,7 @@
 import type {
   PPEPlugin,
   PluginContext,
+  BeforeEvaluateResult,
   EvaluationInput,
   EvaluationResult,
   Rule,
@@ -19,8 +20,8 @@ export abstract class BasePlugin implements PPEPlugin {
     }
   }
 
-  beforeEvaluate(input: EvaluationInput, _rules: ReadonlyArray<Rule>): EvaluationInput {
-    return input;
+  beforeEvaluate(input: EvaluationInput, rules: ReadonlyArray<Rule>): BeforeEvaluateResult {
+    return { input, rules };
   }
 
   afterEvaluate(_input: EvaluationInput, result: EvaluationResult): EvaluationResult {

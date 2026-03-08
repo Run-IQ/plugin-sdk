@@ -1,6 +1,7 @@
 import type {
   PPEPlugin,
   PluginContext,
+  BeforeEvaluateResult,
   EvaluationInput,
   Rule,
   CalculationModel,
@@ -26,7 +27,7 @@ export class PluginTester {
   ): Promise<void> {
     this.plugin.onInit(context);
 
-    const results: EvaluationInput[] = [];
+    const results: BeforeEvaluateResult[] = [];
     for (let i = 0; i < 3; i++) {
       if (this.plugin.beforeEvaluate) {
         results.push(this.plugin.beforeEvaluate(input, rules));
