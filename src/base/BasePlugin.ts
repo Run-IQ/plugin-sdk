@@ -20,11 +20,17 @@ export abstract class BasePlugin implements PPEPlugin {
     }
   }
 
-  beforeEvaluate(input: EvaluationInput, rules: ReadonlyArray<Rule>): BeforeEvaluateResult {
+  beforeEvaluate(
+    input: EvaluationInput,
+    rules: ReadonlyArray<Rule>
+  ): BeforeEvaluateResult | Promise<BeforeEvaluateResult> {
     return { input, rules };
   }
 
-  afterEvaluate(_input: EvaluationInput, result: EvaluationResult): EvaluationResult {
+  afterEvaluate(
+    input: EvaluationInput,
+    result: EvaluationResult
+  ): EvaluationResult | Promise<EvaluationResult> {
     return result;
   }
 
