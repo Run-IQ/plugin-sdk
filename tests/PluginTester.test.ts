@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PluginTester } from '../src/testing/PluginTester.js';
 import { BasePlugin } from '../src/base/BasePlugin.js';
+import { BaseModel } from '../src/base/BaseModel.js';
 import type {
   CalculationModel,
   ValidationResult,
@@ -99,5 +100,187 @@ describe('PluginTester', () => {
     expect(report.summary).toBe('PASS');
     expect(report.passed.length).toBeGreaterThan(0);
     expect(report.failed).toHaveLength(0);
+  });
+
+  describe('negative tests', () => {
+    it('assertDeterminism throws for non-deterministic plugin', async () => {
+      let callCount = 0;
+
+      class NonDeterministicPlugin extends BasePlugin {
+        readonly name = 'non-deterministic';
+        readonly version = '1.0.0';
+        readonly models: CalculationModel[] = [];
+
+        override beforeEvaluate(
+          input: EvaluationInput,
+          rules: ReadonlyArray<Rule>,
+        ): { input: EvaluationInput; rules: ReadonlyArray<Rule> } {
+          callCount++;
+          return {
+            input: { ...input, data: { ...input.data, counter: callCount } },
+            rules,
+          };
+        }
+      }
+
+      const tester = new PluginTester(new NonDeterministicPlugin());
+      await expect(tester.assertDeterminism(input, rules, makeContext())).rejects.toThrow(
+        'Determinism violation',
+      );
+    });
+
+    it('assertNoSideEffects throws for stateful plugin', async () => {
+      let state = 0;
+
+      class StatefulPlugin extends BasePlugin {
+        readonly name = 'stateful';
+        readonly version = '1.0.0';
+        readonly models: CalculationModel[] = [];
+
+        override beforeEvaluate(
+          input: EvaluationInput,
+          rules: ReadonlyArray<Rule>,
+        ): { input: EvaluationInput; rules: ReadonlyArray<Rule> } {
+          state++;
+          return {
+            input: { ...input, data: { ...input.data, stateValue: state } },
+            rules,
+          };
+        }
+      }
+
+      const tester = new PluginTester(new StatefulPlugin());
+      await expect(tester.assertNoSideEffects(input, rules)).rejects.toThrow(
+        'Side effects detected',
+      );
+    });
+
+    it('runAll returns FAIL for non-deterministic plugin', async () => {
+      let counter = 0;
+
+      class FailingPlugin extends BasePlugin {
+        readonly name = 'failing';
+        readonly version = '1.0.0';
+        readonly models: CalculationModel[] = [];
+
+        override beforeEvaluate(
+          input: EvaluationInput,
+          rules: ReadonlyArray<Rule>,
+        ): { input: EvaluationInput; rules: ReadonlyArray<Rule> } {
+          counter++;
+          return {
+            input: { ...input, data: { ...input.data, c: counter } },
+            rules,
+          };
+        }
+      }
+
+      const tester = new PluginTester(new FailingPlugin());
+      const report = await tester.runAll(input, rules, makeContext());
+      expect(report.summary).toBe('FAIL');
+      expect(report.failed.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('BaseModel CalculationOutput return path', () => {
+    it('safeCalculate returns CalculationOutput when model returns it', () => {
+      class OutputModel extends BaseModel {
+        readonly name = 'OUTPUT_MODEL';
+        readonly version = '1.0.0';
+
+        validateParams(_p: unknown): ValidationResult {
+          return { valid: true };
+        }
+
+        calculate(): { value: number; detail: unknown } {
+          return { value: 42, detail: { breakdown: 'test' } };
+        }
+      }
+
+      const model = new OutputModel();
+      const rule = { id: 'r', model: 'OUTPUT_MODEL', params: {} } as unknown as Rule;
+      const result = model.safeCalculate({ amount: 100 }, rule, {});
+      expect(result).toEqual({ value: 42, detail: { breakdown: 'test' } });
+    });
+
+    it('safeCalculate throws on invalid params', () => {
+      class StrictModel extends BaseModel {
+        readonly name = 'STRICT_MODEL';
+        readonly version = '1.0.0';
+
+        validateParams(params: unknown): ValidationResult {
+          if (params !== null && typeof params === 'object' && 'rate' in params) {
+            return { valid: true };
+          }
+          return { valid: false, errors: ['rate is required'] };
+        }
+
+        calculate(): number {
+          return 0;
+        }
+      }
+
+      const model = new StrictModel();
+      const rule = { id: 'r', model: 'STRICT_MODEL', params: {} } as unknown as Rule;
+      expect(() => model.safeCalculate({}, rule, {})).toThrow('Invalid params for model STRICT_MODEL');
+    });
+  });
+
+  describe('teardown', () => {
+    it('teardown does not throw for default plugin', () => {
+      const plugin = new StablePlugin();
+      expect(() => plugin.teardown()).not.toThrow();
+    });
+  });
+
+  describe('multiple models registration', () => {
+    it('registers all models on onInit', () => {
+      class ModelA implements CalculationModel {
+        readonly name = 'MODEL_A';
+        readonly version = '1.0.0';
+        validateParams(): ValidationResult {
+          return { valid: true };
+        }
+        calculate(): number {
+          return 1;
+        }
+      }
+
+      class ModelB implements CalculationModel {
+        readonly name = 'MODEL_B';
+        readonly version = '1.0.0';
+        validateParams(): ValidationResult {
+          return { valid: true };
+        }
+        calculate(): number {
+          return 2;
+        }
+      }
+
+      class ModelC implements CalculationModel {
+        readonly name = 'MODEL_C';
+        readonly version = '1.0.0';
+        validateParams(): ValidationResult {
+          return { valid: true };
+        }
+        calculate(): number {
+          return 3;
+        }
+      }
+
+      class MultiModelPlugin extends BasePlugin {
+        readonly name = 'multi-model';
+        readonly version = '1.0.0';
+        readonly models = [new ModelA(), new ModelB(), new ModelC()];
+      }
+
+      const plugin = new MultiModelPlugin();
+      const ctx = makeContext();
+      plugin.onInit(ctx);
+
+      expect(ctx.modelRegistry.has('MODEL_A')).toBe(true);
+      expect(ctx.modelRegistry.has('MODEL_B')).toBe(true);
+      expect(ctx.modelRegistry.has('MODEL_C')).toBe(true);
+    });
   });
 });
