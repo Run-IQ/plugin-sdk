@@ -9,6 +9,8 @@ export type {
   Expression,
   EvaluationInput,
   EvaluationResult,
+  BeforeEvaluateResult,
+  CalculationOutput,
   BreakdownItem,
   SkippedRule,
   SkipReason,
@@ -27,3 +29,4 @@ export type {
   PluginDescriptor,
   PluginBundle,
 } from './types/index.js';
+export { PPEError } from './types/index.js';

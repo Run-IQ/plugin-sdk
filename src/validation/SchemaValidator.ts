@@ -32,7 +32,7 @@ export class SchemaValidator {
       }
 
       if (def.type === 'number') {
-        if (typeof value !== 'number' || Number.isNaN(value)) {
+        if (typeof value !== 'number' || Number.isNaN(value) || !Number.isFinite(value)) {
           errors.push(`"${key}" must be a number`);
           continue;
         }
@@ -69,7 +69,7 @@ export class SchemaValidator {
   }
 
   static number(value: unknown, opts?: { min?: number; max?: number }): boolean {
-    if (typeof value !== 'number' || Number.isNaN(value)) return false;
+    if (typeof value !== 'number' || Number.isNaN(value) || !Number.isFinite(value)) return false;
     if (opts?.min !== undefined && value < opts.min) return false;
     if (opts?.max !== undefined && value > opts.max) return false;
     return true;

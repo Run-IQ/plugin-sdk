@@ -38,7 +38,7 @@ describe('BasePlugin', () => {
     const plugin = new TestPlugin();
     const input = { requestId: 'r', data: {}, meta: { tenantId: 't' } };
     const result = plugin.beforeEvaluate(input, []);
-    expect(result).toBe(input);
+    expect(result).toEqual({ input, rules: [] });
   });
 
   it('afterEvaluate returns result unchanged by default', () => {

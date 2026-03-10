@@ -3,6 +3,8 @@ export type {
   Expression,
   EvaluationInput,
   EvaluationResult,
+  BeforeEvaluateResult,
+  CalculationOutput,
   BreakdownItem,
   SkippedRule,
   SkipReason,
@@ -16,6 +18,8 @@ export type {
   EvaluationTrace,
   TraceStep,
 } from '@run-iq/core';
+
+export { PPEError } from '@run-iq/core';
 
 export type {
   RuleFieldDescriptor,

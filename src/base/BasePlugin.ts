@@ -22,14 +22,14 @@ export abstract class BasePlugin implements PPEPlugin {
 
   beforeEvaluate(
     input: EvaluationInput,
-    rules: ReadonlyArray<Rule>
+    rules: ReadonlyArray<Rule>,
   ): BeforeEvaluateResult | Promise<BeforeEvaluateResult> {
     return { input, rules };
   }
 
   afterEvaluate(
     input: EvaluationInput,
-    result: EvaluationResult
+    result: EvaluationResult,
   ): EvaluationResult | Promise<EvaluationResult> {
     return result;
   }
