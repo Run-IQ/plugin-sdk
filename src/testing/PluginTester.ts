@@ -3,8 +3,12 @@ import type {
   PluginContext,
   BeforeEvaluateResult,
   EvaluationInput,
+  EvaluationResult,
   Rule,
   CalculationModel,
+  BreakdownItem,
+  SkippedRule,
+  EvaluationTrace,
 } from '@run-iq/core';
 
 export interface TestReport {
@@ -35,9 +39,13 @@ export class PluginTester {
     }
 
     if (results.length === 3) {
-      const json0 = JSON.stringify(results[0]);
-      const json1 = JSON.stringify(results[1]);
-      const json2 = JSON.stringify(results[2]);
+      const [r0, r1, r2] = results;
+      if (!r0 || !r1 || !r2) {
+        throw new Error('Expected 3 results');
+      }
+      const json0 = JSON.stringify(r0);
+      const json1 = JSON.stringify(r1);
+      const json2 = JSON.stringify(r2);
       if (json0 !== json1 || json1 !== json2) {
         throw new Error('Determinism violation: different results for same input');
       }
@@ -45,8 +53,8 @@ export class PluginTester {
   }
 
   async assertImmutability(input: EvaluationInput, rules: ReadonlyArray<Rule>): Promise<void> {
-    const inputCopy = JSON.parse(JSON.stringify(input)) as EvaluationInput;
-    const rulesCopy = JSON.parse(JSON.stringify(rules)) as Rule[];
+    const inputCopy = structuredClone(input) as EvaluationInput;
+    const rulesCopy = structuredClone(rules) as Rule[];
 
     if (this.plugin.beforeEvaluate) {
       await this.plugin.beforeEvaluate(input, rules);
@@ -57,6 +65,17 @@ export class PluginTester {
     }
     if (JSON.stringify(rules) !== JSON.stringify(rulesCopy)) {
       throw new Error('Immutability violation: beforeEvaluate mutated rules');
+    }
+
+    if (this.plugin.afterEvaluate) {
+      const mockResult = this.createMockResult(input);
+      const resultCopy = structuredClone(mockResult);
+
+      await this.plugin.afterEvaluate(input, mockResult);
+
+      if (JSON.stringify(mockResult) !== JSON.stringify(resultCopy)) {
+        throw new Error('Immutability violation: afterEvaluate mutated result');
+      }
     }
   }
 
@@ -123,6 +142,25 @@ export class PluginTester {
       passed,
       failed,
       summary: failed.length === 0 ? 'PASS' : 'FAIL',
+    };
+  }
+
+  private createMockResult(input: EvaluationInput): EvaluationResult {
+    return {
+      requestId: input.requestId,
+      value: 0,
+      breakdown: [] as readonly BreakdownItem[],
+      appliedRules: [] as readonly Rule[],
+      skippedRules: [] as readonly SkippedRule[],
+      trace: {
+        steps: [],
+        totalDurationMs: 0,
+      } satisfies EvaluationTrace,
+      snapshotId: '',
+      engineVersion: '0.0.0',
+      pluginVersions: {},
+      dslVersions: {},
+      timestamp: new Date(0),
     };
   }
 
