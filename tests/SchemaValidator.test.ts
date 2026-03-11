@@ -54,11 +54,36 @@ describe('SchemaValidator', () => {
     expect(bad.valid).toBe(false);
   });
 
+  it('rejects Infinity as a number value', () => {
+    const result = SchemaValidator.validate({ amount: Infinity }, { amount: { type: 'number' } });
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain('"amount" must be a number');
+
+    const negResult = SchemaValidator.validate(
+      { amount: -Infinity },
+      { amount: { type: 'number' } },
+    );
+    expect(negResult.valid).toBe(false);
+    expect(negResult.errors).toContain('"amount" must be a number');
+  });
+
+  it('rejects NaN as a number value', () => {
+    const result = SchemaValidator.validate({ amount: NaN }, { amount: { type: 'number' } });
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain('"amount" must be a number');
+  });
+
   describe('static helpers', () => {
     it('number validates correctly', () => {
       expect(SchemaValidator.number(5, { min: 0, max: 10 })).toBe(true);
       expect(SchemaValidator.number(-1, { min: 0 })).toBe(false);
       expect(SchemaValidator.number('nope')).toBe(false);
+    });
+
+    it('number rejects Infinity and NaN', () => {
+      expect(SchemaValidator.number(Infinity)).toBe(false);
+      expect(SchemaValidator.number(-Infinity)).toBe(false);
+      expect(SchemaValidator.number(NaN)).toBe(false);
     });
 
     it('string validates correctly', () => {
