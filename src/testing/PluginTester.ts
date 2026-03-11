@@ -19,9 +19,17 @@ export interface TestReport {
 
 export class PluginTester {
   private readonly plugin: PPEPlugin;
+  private initialized = false;
 
   constructor(plugin: PPEPlugin) {
     this.plugin = plugin;
+  }
+
+  private ensureInit(context: PluginContext): void {
+    if (!this.initialized) {
+      this.plugin.onInit(context);
+      this.initialized = true;
+    }
   }
 
   async assertDeterminism(
@@ -29,7 +37,7 @@ export class PluginTester {
     rules: ReadonlyArray<Rule>,
     context: PluginContext,
   ): Promise<void> {
-    this.plugin.onInit(context);
+    this.ensureInit(context);
 
     const results: BeforeEvaluateResult[] = [];
     for (let i = 0; i < 3; i++) {

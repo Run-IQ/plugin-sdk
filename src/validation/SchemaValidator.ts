@@ -10,8 +10,16 @@ export interface SchemaFieldDef {
 
 export type SchemaDefinition = Record<string, SchemaFieldDef>;
 
+export interface ValidateOptions {
+  readonly strict?: boolean | undefined;
+}
+
 export class SchemaValidator {
-  static validate(params: unknown, schema: SchemaDefinition): ValidationResult {
+  static validate(
+    params: unknown,
+    schema: SchemaDefinition,
+    options?: ValidateOptions,
+  ): ValidationResult {
     const errors: string[] = [];
 
     if (params === null || typeof params !== 'object') {
@@ -19,6 +27,14 @@ export class SchemaValidator {
     }
 
     const obj = params as Record<string, unknown>;
+
+    if (options?.strict === true) {
+      for (const key of Object.keys(obj)) {
+        if (!(key in schema)) {
+          errors.push(`unexpected key "${key}"`);
+        }
+      }
+    }
 
     for (const [key, def] of Object.entries(schema)) {
       const value = obj[key];
