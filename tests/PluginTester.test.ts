@@ -222,7 +222,9 @@ describe('PluginTester', () => {
 
       const model = new StrictModel();
       const rule = { id: 'r', model: 'STRICT_MODEL', params: {} } as unknown as Rule;
-      expect(() => model.safeCalculate({}, rule, {})).toThrow('Invalid params for model STRICT_MODEL');
+      expect(() => model.safeCalculate({}, rule, {})).toThrow(
+        'Invalid params for model STRICT_MODEL',
+      );
     });
   });
 
@@ -230,6 +232,60 @@ describe('PluginTester', () => {
     it('teardown does not throw for default plugin', () => {
       const plugin = new StablePlugin();
       expect(() => plugin.teardown()).not.toThrow();
+    });
+  });
+
+  describe('assertNoSideEffects with model.calculate', () => {
+    it('passes when model.calculate is pure', async () => {
+      const tester = new PluginTester(new StablePlugin());
+      const ctx = makeContext();
+      const ruleForModel: Rule = {
+        id: 'r1',
+        model: 'STABLE',
+        params: {},
+        priority: 1,
+        condition: { dsl: 'jsonlogic', value: true },
+        effectiveDate: new Date('2025-01-01'),
+        checksum: 'abc',
+      } as unknown as Rule;
+      await expect(tester.assertNoSideEffects(input, [ruleForModel], ctx)).resolves.not.toThrow();
+    });
+
+    it('throws when model.calculate has side effects', async () => {
+      let counter = 0;
+
+      class SideEffectModel implements CalculationModel {
+        readonly name = 'SIDE_EFFECT';
+        readonly version = '1.0.0';
+        validateParams(_p: unknown): ValidationResult {
+          return { valid: true };
+        }
+        calculate(): number {
+          counter++;
+          return counter;
+        }
+      }
+
+      class SideEffectPlugin extends BasePlugin {
+        readonly name = 'side-effect';
+        readonly version = '1.0.0';
+        readonly models = [new SideEffectModel()];
+      }
+
+      const tester = new PluginTester(new SideEffectPlugin());
+      const ctx = makeContext();
+      const rule: Rule = {
+        id: 'r1',
+        model: 'SIDE_EFFECT',
+        params: {},
+        priority: 1,
+        condition: { dsl: 'jsonlogic', value: true },
+        effectiveDate: new Date('2025-01-01'),
+        checksum: 'abc',
+      } as unknown as Rule;
+      await expect(tester.assertNoSideEffects(input, [rule], ctx)).rejects.toThrow(
+        'Side effects detected in model "SIDE_EFFECT"',
+      );
     });
   });
 

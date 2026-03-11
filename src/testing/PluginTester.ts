@@ -109,13 +109,37 @@ export class PluginTester {
     }
   }
 
-  async assertNoSideEffects(input: EvaluationInput, rules: ReadonlyArray<Rule>): Promise<void> {
+  async assertNoSideEffects(
+    input: EvaluationInput,
+    rules: ReadonlyArray<Rule>,
+    context?: PluginContext,
+  ): Promise<void> {
     if (this.plugin.beforeEvaluate) {
       const r1 = await this.plugin.beforeEvaluate(input, rules);
       const r2 = await this.plugin.beforeEvaluate(input, rules);
 
       if (JSON.stringify(r1) !== JSON.stringify(r2)) {
         throw new Error('Side effects detected: different results between calls');
+      }
+    }
+
+    if (context) {
+      this.ensureInit(context);
+      const allModels = context.modelRegistry.getAll();
+      for (const [, model] of allModels) {
+        const testRule = rules[0];
+        if (!testRule) continue;
+        const validation = model.validateParams(testRule.params);
+        if (!validation.valid) continue;
+
+        const result1 = model.calculate(input.data, testRule, testRule.params);
+        const result2 = model.calculate(input.data, testRule, testRule.params);
+
+        if (JSON.stringify(result1) !== JSON.stringify(result2)) {
+          throw new Error(
+            `Side effects detected in model "${model.name}": different results between calculate() calls`,
+          );
+        }
       }
     }
   }
@@ -131,7 +155,7 @@ export class PluginTester {
     const tests = [
       { name: 'determinism', fn: () => this.assertDeterminism(input, rules, context) },
       { name: 'immutability', fn: () => this.assertImmutability(input, rules) },
-      { name: 'noSideEffects', fn: () => this.assertNoSideEffects(input, rules) },
+      { name: 'noSideEffects', fn: () => this.assertNoSideEffects(input, rules, context) },
     ];
 
     for (const t of tests) {
