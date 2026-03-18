@@ -1,6 +1,6 @@
 {
   "name": "@run-iq/plugin-sdk",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Plugin SDK for PPE — BasePlugin, BaseModel, PluginTester",
   "type": "module",
   "main": "./dist/index.cjs",
