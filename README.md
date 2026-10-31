@@ -7,10 +7,10 @@ A plugin is how domain logic gets into the engine. [`@run-iq/core`](https://gith
 ## Install
 
 ```bash
-npm install @run-iq/plugin-sdk @run-iq/core
+npm install @run-iq/plugin-sdk@next @run-iq/core@next
 ```
 
-`@run-iq/core` is a peer dependency. Requires Node.js 20 or later.
+`@run-iq/core` is a peer dependency. Install the whole `@run-iq` set from the `next` tag, the line built on [`@run-iq/spec`](https://github.com/Run-IQ/spec). Requires Node.js 20 or later.
 
 ## Example
 
@@ -103,9 +103,9 @@ With `strict: true`, keys not in the schema are reported as errors.
 
 ```ts
 import { PluginTester } from '@run-iq/plugin-sdk';
-import { ModelRegistry, DSLRegistry } from '@run-iq/core';
+import { ModelRegistry, DSLRegistry, VERSION } from '@run-iq/core';
 
-const context = { modelRegistry: new ModelRegistry(), dslRegistry: new DSLRegistry(), engineVersion: '0.2.8' };
+const context = { modelRegistry: new ModelRegistry(), dslRegistry: new DSLRegistry(), engineVersion: VERSION };
 const report = await new PluginTester(new ShippingPlugin()).runAll(input, [rule], context);
 
 report.summary; // 'PASS'
