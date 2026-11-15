@@ -41,14 +41,12 @@ jobs:
       - name: Install from the published packages
         if: ${{ !startsWith(github.base_ref || github.ref_name, 'refonte/') }}
         run: npm ci
-      - name: Typecheck (baseline failure, Task 13)
+      - name: Typecheck (exact baseline, Task 13)
         id: typecheck
-        # Baseline failure, listed in the pull request that added this workflow; Task 13 makes it green.
-        continue-on-error: true
-        run: npm run typecheck
-      - name: Say that the typecheck failed
-        if: steps.typecheck.outcome == 'failure'
-        run: echo "::warning::Typecheck fails at the baseline (Task 13 makes it green); see the pull request that added this workflow."
+        # Fails at the baseline: the exact failures are committed in .github/baseline/typecheck.txt and the step is
+        # green only when they are exactly these. A new failure, or a fixed one not removed from the file, fails it.
+        # Task 13 makes it fully green and deletes the file.
+        run: bash .github/scripts/baseline-check.sh typecheck typecheck
       - name: Lint
         id: lint
         run: npm run lint
@@ -58,11 +56,9 @@ jobs:
       - name: Test
         id: test
         run: npm test
-      - name: Build (baseline failure, Task 13)
+      - name: Build (exact baseline, Task 13)
         id: build
-        # Baseline failure, listed in the pull request that added this workflow; Task 13 makes it green.
-        continue-on-error: true
-        run: npm run build
-      - name: Say that the build failed
-        if: steps.build.outcome == 'failure'
-        run: echo "::warning::Build fails at the baseline (Task 13 makes it green); see the pull request that added this workflow."
+        # Fails at the baseline: the exact failures are committed in .github/baseline/build.txt and the step is
+        # green only when they are exactly these. A new failure, or a fixed one not removed from the file, fails it.
+        # Task 13 makes it fully green and deletes the file.
+        run: bash .github/scripts/baseline-check.sh build build
