@@ -1,2 +1,2 @@
-src/testing/PluginTester.ts:191 TS2353
-src/testing/PluginTester.ts:201 TS2375
+src/testing/PluginTester.ts:191:7 TS2353
+src/testing/PluginTester.ts:201:7 TS2375
